@@ -4,7 +4,6 @@
 TODO:
 
     - API
-        - User API
         - Upload API
         - History control
         - Chat API
