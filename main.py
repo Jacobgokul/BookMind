@@ -6,11 +6,12 @@ app = FastAPI(title="BookMind")  # Create an instance of FastAPI with a custom t
 
 Base.metadata.create_all(engine)  # Create all database tables defined in models
 
-from routers import user_service, genric_services  # Import routers for user and generic services
+from routers import user_service, genric_services, ai_services  # Import routers for user and generic services
 
 # To reflect in UI or to use it the router must register with app (fastapi object).
 app.include_router(user_service.router)  # Register user service router with the FastAPI app
 app.include_router(genric_services.router)  # Register generic service router with the FastAPI app
+app.include_router(ai_services.router)
 
 
 @app.get("/")  # Define the root endpoint

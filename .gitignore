@@ -59,3 +59,6 @@ env3
 __pycache__
 .pyc
 .vscode
+
+#Application files
+test_file/
