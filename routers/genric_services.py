@@ -7,6 +7,7 @@ import traceback  # For printing detailed error messages during debugging
 from fastapi import APIRouter, UploadFile, status  # FastAPI components for file handling
 from fastapi.responses import JSONResponse  # For custom JSON responses
 from utils.parser import pdf_parsing  # Custom function to extract text from PDFs
+from utils.ai_utils import chunking, convert_to_embedding
 
 # ========================================
 # Router Configuration
@@ -66,9 +67,13 @@ async def upload_file_api(
                 content="Sorry! Upload only text or pdf files."
             )
         
+        chunked_data = chunking(data=parsed_data)
+        print("==========Chunked words", chunked_data)
+        embedded_data = convert_to_embedding(chunked_data)
+
         # Return extracted text with success status
         return JSONResponse(
-            content=parsed_data,
+            content=embedded_data,
             status_code=status.HTTP_200_OK  # 200: Success
         )
         
