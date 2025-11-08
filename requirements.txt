@@ -24,6 +24,10 @@ groq
 # File Processing
 pypdf
 
+# Vector Database
+faiss-cpu
+numpy
+
 # Environment Management
 python-dotenv
 

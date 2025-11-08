@@ -5,9 +5,12 @@ Handles AI chat functionality using Groq's LLaMA model for intelligent responses
 
 import os  # For accessing environment variables
 from dotenv import load_dotenv  # Loads environment variables from .env file
-from fastapi import APIRouter  # Router for grouping related endpoints
+from fastapi import APIRouter, Depends  # Router for grouping related endpoints
 # from openai import OpenAI  # Alternative: OpenAI client (currently commented out)
 from groq import Groq  # Groq client for accessing LLaMA models
+from utils.indexing import get_context_for_query  # RAG retrieval
+from utils.ai_utils import model  # Embedding model for query encoding
+from utils.auth_utils import get_current_user
 
 # ========================================
 # Router Configuration
@@ -35,39 +38,44 @@ groq_client = Groq(api_key=groq_api_key)  # Initialize Groq client
 # AI Chat Endpoint
 # ========================================
 @router.get("/chat")
-def ai_chat(user_query: str):
+def ai_chat(user_query: str, _ = Depends(get_current_user)):
     """
-    Chat with AI assistant using Groq's LLaMA model.
+    Chat with AI assistant using Groq's LLaMA model with RAG.
     
-    This endpoint sends user queries to the LLaMA AI model and returns intelligent responses.
-    The system prompt defines the AI's behavior and personality.
+    This endpoint:
+    1. Retrieves relevant context from uploaded documents
+    2. Sends user query + context to LLaMA model
+    3. Returns intelligent, context-aware response
     
     Args:
         user_query (str): The question or text from the user
         
     Returns:
-        str: AI-generated response to the user's query
+        str: AI-generated response based on user's documents
         
     Example:
-        GET /ai/chat?user_query=What is FastAPI?
-        Response: "FastAPI is a modern Python web framework..."
+        GET /ai/chat?user_query=What is this document about?
+        Response: "Based on the document, it discusses..."
     """
     
-    # Construct the conversation with system and user roles
-    # System role: Defines how the AI should behave
-    # User role: The actual question from the user
+    # Retrieve relevant context from uploaded documents
+    context = get_context_for_query(user_query, model, top_k=3)
+    
+    # Construct enhanced prompt with context
     prompt = [
         {
             "role": "system",  # System message sets the AI's behavior
             "content": """
-                You are a helpfull assitant. 
-                Your goal is to respond people with clear and precise answer based on the user query.
-                If user provided context analysis that and respond carefully to the question. Don't confuse the question and context provided by the user
+                You are a helpful assistant. 
+                Your goal is to respond to people with clear and precise answers based on the user query.
+                If user provided context, analyze that and respond carefully to the question. 
+                Don't confuse the question and context provided by the user.
+                If no relevant context is found, answer based on your general knowledge but mention that it's not from the uploaded documents.
                 """
         },
         {
-            "role": "user",  # User's actual question
-            "content": user_query
+            "role": "user",  # User's question with context
+            "content": f"{context}\n\nQuestion: {user_query}"
         }
     ]
     

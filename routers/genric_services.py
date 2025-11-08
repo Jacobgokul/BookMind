@@ -4,10 +4,12 @@ Handles file upload and parsing for text and PDF documents.
 """
 
 import traceback  # For printing detailed error messages during debugging
-from fastapi import APIRouter, UploadFile, status  # FastAPI components for file handling
+from fastapi import APIRouter, UploadFile, status, Depends  # FastAPI components for file handling
 from fastapi.responses import JSONResponse  # For custom JSON responses
+from utils.auth_utils import get_current_user
 from utils.parser import pdf_parsing  # Custom function to extract text from PDFs
 from utils.ai_utils import chunking, convert_to_embedding
+from utils.indexing import store_embeddings  # Vector database storage
 
 # ========================================
 # Router Configuration
@@ -23,7 +25,8 @@ router = APIRouter(
 # ========================================
 @router.post("/upload_file")
 async def upload_file_api(
-    file: UploadFile  # FastAPI automatically handles multipart/form-data file uploads
+    file: UploadFile,  # FastAPI automatically handles multipart/form-data file uploads
+    _ = Depends(get_current_user)
 ):
     """
     Upload and parse text or PDF files.
@@ -68,12 +71,31 @@ async def upload_file_api(
             )
         
         chunked_data = chunking(data=parsed_data)
-        print("==========Chunked words", chunked_data)
+        print("==========Chunked words", len(chunked_data))
+        
         embedded_data = convert_to_embedding(chunked_data)
+        print("==========Embeddings generated", len(embedded_data))
+        
+        # Store embeddings in FAISS vector database
+        metadata = {
+            "filename": file.filename,
+            "content_type": file.content_type
+        }
+        success = store_embeddings(chunked_data, embedded_data, metadata)
+        
+        if not success:
+            return JSONResponse(
+                content="Failed to store embeddings",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         # Return extracted text with success status
         return JSONResponse(
-            content=embedded_data,
+            content={
+                "message": "File uploaded and processed successfully",
+                "chunks_stored": len(chunked_data),
+                "filename": file.filename
+            },
             status_code=status.HTTP_200_OK  # 200: Success
         )
         

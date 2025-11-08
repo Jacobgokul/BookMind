@@ -13,8 +13,8 @@ print("==========Embedding model loaded==============")
 
 splitter = RecursiveCharacterTextSplitter(
     separators=["\n\n", "\n", ".", ",", "!", "?", ""],
-    chunk_size = 10,
-    chunk_overlap = 2
+    chunk_size = 500,  # Increased from 10 to 500 for better context
+    chunk_overlap = 50  # Increased from 2 to 50 for continuity
 )
 print("========Splitter config loaded===========")
 
