@@ -174,8 +174,6 @@ ACCESS_TOKEN_EXPIRE_HOURS = 3
   - [ ] Document storage and retrieval
 
 - **AI Improvements**
-  - [ ] Vector database integration for document context
-  - [ ] RAG (Retrieval Augmented Generation) implementation
   - [ ] Multi-document support
 
 - **Security**
