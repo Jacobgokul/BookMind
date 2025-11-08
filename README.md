@@ -22,7 +22,7 @@ An intelligent document processing and AI chat application built with FastAPI. U
 
 ## 📋 Prerequisites
 
-- Python 3.8+
+- Python 3.10+
 - PostgreSQL database
 - Groq API key (for AI features)
 
